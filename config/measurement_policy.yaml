@@ -1,0 +1,18 @@
+version: 1
+allowed:
+  - measurement: "sha256:REPLACE_NITRO_PCR0"
+    version: "0.1.0"
+    env: "prod"
+    platform: nitro
+  - measurement: "sev-snp:REPLACE_SNP_MEASUREMENT"
+    version: "0.1.0"
+    env: "prod"
+    platform: sev-snp
+  - measurement: "tdx:mrtd:REPLACE_TDX_MRTD"
+    version: "0.1.0"
+    env: "prod"
+    platform: tdx
+  - measurement: "dev:unattested"
+    version: "0.0.1"
+    env: "dev"
+    platform: dev
