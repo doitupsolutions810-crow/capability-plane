@@ -1,0 +1,11 @@
+capability-plane.example.com {
+    encode gzip
+    @plane path /v1/capabilities/issue /v1/capabilities/attenuate /v1/capabilities/verify /v1/execute /health
+    handle @plane { reverse_proxy 127.0.0.1:8090 }
+    handle /dashboard* { reverse_proxy 127.0.0.1:8501 }
+    handle { respond "path not allowed" 404 }
+    header {
+        Strict-Transport-Security "max-age=31536000; includeSubDomains"
+        X-Content-Type-Options nosniff
+    }
+}
