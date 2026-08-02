@@ -1,0 +1,17 @@
+name: dev
+trust_domain: prod
+expected_trust_domain: prod
+allowed_policy_versions: [1, 2, 3, 4, 5]
+max_delegation_depth: 3
+production: false
+cloud:
+  endpoint_url: http://127.0.0.1:4566
+  evidence_bucket: capability-evidence
+  audit_queue: capability-audit
+attestation:
+  required: false
+  platforms: [nitro, sev-snp, tdx, tpm]
+measurement_policy_path: config/measurement_policy.yaml
+broker_directory_path: config/broker_directory.yaml
+acceptance_policy_path: config/acceptance_policy.yaml
+floci_env_path: config/floci.env

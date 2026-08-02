@@ -1,0 +1,16 @@
+name: prod
+trust_domain: prod
+expected_trust_domain: prod
+allowed_policy_versions: [4, 5]
+max_delegation_depth: 2
+production: true
+cloud:
+  endpoint_url: null
+  evidence_bucket: capability-evidence-prod
+  audit_queue: capability-audit-prod
+attestation:
+  required: true
+  platforms: [nitro, sev-snp, tdx]
+measurement_policy_path: config/measurement_policy.yaml
+broker_directory_path: config/broker_directory.yaml
+acceptance_policy_path: config/acceptance_policy.yaml

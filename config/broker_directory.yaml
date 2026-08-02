@@ -1,0 +1,6 @@
+# measurement → broker verifying key
+- measurement: "dev:unattested"
+  verifying_key_b64: "IEVy98eicyqmixfYot4vHGb0nF2iINTRvY/8ILsCME0="
+  trust_domain: prod
+  policy_version: 1
+  platform: dev
