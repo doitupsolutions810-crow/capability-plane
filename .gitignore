@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+.env
+config/broker_ed25519.pem
+evidence/*.json
+*.log
