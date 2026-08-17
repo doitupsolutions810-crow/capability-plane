@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+set -euo pipefail
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+cd "$ROOT"
+export PYTHONPATH="$ROOT"
+export ALLOW_ADMIN_DESTRUCTIVE_ACTIONS="${ALLOW_ADMIN_DESTRUCTIVE_ACTIONS:-true}"
+export PLANE_TRUST_DOMAIN="${PLANE_TRUST_DOMAIN:-prod}"
+export PLANE_SPIFFE_ID="${PLANE_SPIFFE_ID:-spiffe://prod/agent/horizon-a}"
+export PLANE_PORT="${PLANE_PORT:-8093}"
+export FRONT_DOOR_PORT="${FRONT_DOOR_PORT:-8445}"
+export UPSTREAM_PLANE="http://127.0.0.1:${PLANE_PORT}"
+export PROVIDER_ADAPTER="${PROVIDER_ADAPTER:-generic}"
+export OUTBOX_DB_PATH="${OUTBOX_DB_PATH:-$ROOT/data/outbox.db}"
+mkdir -p "$ROOT/data" /tmp/plane-stack "$ROOT/config/tls"
+echo "[1] Durability"; python3 -c "from admin.durable_outbox import DurableOutbox, jetstream_publish_fn; o=DurableOutbox(); o.enqueue('req-coherent-1','admin.demo',{'ok':True}); print('published', o.relay_once(jetstream_publish_fn()), o.unpublished_count())"
+echo "[2] Identity"; python3 -c "from plane_service.spiffe_identity import identity_summary; import json; print(json.dumps(identity_summary()))"
+echo "[3] Providers"; python3 -c "import os; os.environ['ALLOW_ADMIN_DESTRUCTIVE_ACTIONS']='true'; from admin.providers.factory import build_suspend_service; from admin.approvals import ApprovalRecord; from admin.suspend_tenant import SuspendTenantRequest; svc=build_suspend_service(); r=svc.suspend(SuspendTenantRequest(tenant_id='northwind-22',request_id='coherent-suspend-1',actor_id='admin-73',reason='coherent',suspension_mode='full',approvals=[ApprovalRecord('sec-214','security_admin','approved','tenant:northwind-22'),ApprovalRecord('own-81','resource_owner','approved','tenant:northwind-22')])); print(r.state, r.duplicate)"
+echo "[4] Start broker"; python3 plane_service/server.py > /tmp/plane-stack/broker_1_4.log 2>&1 & sleep 1; curl -sf "http://127.0.0.1:${PLANE_PORT}/health" || curl -sf http://127.0.0.1:8090/health; echo; echo "[+] coherent 1-4 verified"
