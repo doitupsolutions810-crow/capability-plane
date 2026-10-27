@@ -1,0 +1,30 @@
+name: Capability rights contract
+
+on:
+  pull_request:
+    paths:
+      - "plane_service/core.py"
+      - "tests/test_capability_method_authorization.py"
+      - "contracts/capability-rights-v1.json"
+      - ".github/workflows/capability-rights-contract.yml"
+  push:
+    branches: [main]
+    paths:
+      - "plane_service/core.py"
+      - "tests/test_capability_method_authorization.py"
+      - "contracts/capability-rights-v1.json"
+      - ".github/workflows/capability-rights-contract.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  method-authorization:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Run method-bound authorization regressions
+        run: python -m unittest discover -s tests -p "test_capability_method_authorization.py" -v
