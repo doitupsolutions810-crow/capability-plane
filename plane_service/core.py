@@ -32,10 +32,11 @@ def attenuate(cap: dict[str, Any], new_rights: list[dict[str, Any]]) -> dict[str
     fields = ("type", "resource", "method")
     for right in parent_rights:
         if not isinstance(right, dict):
-            continue
+            raise ValueError("each parent right must be an object")
         key = tuple(right.get(field) for field in fields)
-        if all(isinstance(value, str) and value.strip() for value in key):
-            old.add(key)
+        if not all(isinstance(value, str) and value.strip() for value in key):
+            raise ValueError("each parent right requires non-empty type, resource, and method")
+        old.add(key)
 
     for right in new_rights:
         if not isinstance(right, dict):
