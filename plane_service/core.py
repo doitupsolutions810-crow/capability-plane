@@ -60,12 +60,28 @@ def verify(
     caller: str,
     now_ts: Optional[float] = None,
 ) -> bool:
+    """Fail closed unless type, resource, and method all match exactly.
+
+    Wildcard methods are intentionally unsupported until their semantics are
+    specified and tested; an omitted requested method is not authorization.
+    """
     ts = now_ts if now_ts is not None else now()
-    if ts > float(cap.get("expires_at") or 0):
+    try:
+        expires_at = float(cap.get("expires_at") or 0)
+    except (TypeError, ValueError):
+        return False
+    if ts >= expires_at:
         return False
     if cap.get("audience") not in (caller, "*"):
         return False
-    for r in cap.get("rights") or []:
-        if r.get("type") == required.get("type") and r.get("resource") == required.get("resource"):
+    required_method = required.get("method")
+    if not isinstance(required_method, str) or not required_method:
+        return False
+    for right in cap.get("rights") or []:
+        if (
+            right.get("type") == required.get("type")
+            and right.get("resource") == required.get("resource")
+            and right.get("method") == required_method
+        ):
             return True
     return False
