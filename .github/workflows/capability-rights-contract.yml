@@ -4,14 +4,18 @@ on:
   pull_request:
     paths:
       - "plane_service/core.py"
+      - "sovereign/dashboard/app.py"
       - "tests/test_capability_method_authorization.py"
+      - "tests/test_dashboard_method_authorization.py"
       - "contracts/capability-rights-v1.json"
       - ".github/workflows/capability-rights-contract.yml"
   push:
     branches: [main]
     paths:
       - "plane_service/core.py"
+      - "sovereign/dashboard/app.py"
       - "tests/test_capability_method_authorization.py"
+      - "tests/test_dashboard_method_authorization.py"
       - "contracts/capability-rights-v1.json"
       - ".github/workflows/capability-rights-contract.yml"
 
@@ -27,4 +31,4 @@ jobs:
         with:
           python-version: "3.12"
       - name: Run method-bound authorization regressions
-        run: python -m unittest discover -s tests -p "test_capability_method_authorization.py" -v
+        run: python -m unittest discover -s tests -p "test_*method_authorization.py" -v

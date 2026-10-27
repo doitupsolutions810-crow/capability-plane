@@ -56,14 +56,36 @@ def snapshot() -> dict:
     }}
 
 def run_intent(body: dict) -> dict:
-    rights = body.get("rights") or [{"type": "Execute", "resource": body.get("resource", "tool.summarize")}]
+    rights = body.get("rights")
+    if rights is None:
+        rights = [{
+            "type": "Execute",
+            "resource": body.get("resource"),
+            "method": body.get("method"),
+        }]
+    if not isinstance(rights, list) or len(rights) != 1:
+        return {
+            "stage": "validate",
+            "status": "error",
+            "error": "exactly one capability right is required per intent",
+        }
+    required = rights[0]
+    if not isinstance(required, dict) or any(
+        not isinstance(required.get(field), str) or not required[field].strip()
+        for field in ("type", "resource", "method")
+    ):
+        return {
+            "stage": "validate",
+            "status": "error",
+            "error": "capability right requires non-empty type, resource, and method",
+        }
     caller = body.get("caller") or os.environ.get("PLANE_SPIFFE_ID", "spiffe://prod/agent/dev")
     ttl = min(int(body.get("ttl_seconds") or 60), 120)
     issued = plane_post("/v1/capabilities/issue", {"rights": rights, "ttl_seconds": ttl, "caller": caller,
         "constraints": body.get("constraints") or {"rate_limit": {"count": 5, "window_seconds": 60}}})
     if issued.get("status") != "ok":
         return {"stage": "issue", **issued}
-    cap, sig, required = issued["capability"], issued["signature"], rights[0]
+    cap, sig = issued["capability"], issued["signature"]
     verified = plane_post("/v1/capabilities/verify", {"capability": cap, "signature": sig, "required": required, "caller": caller})
     if not verified.get("valid"):
         return {"stage": "verify", "issue": issued, **verified}

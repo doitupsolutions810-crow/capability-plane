@@ -1,5 +1,10 @@
+import json
+from pathlib import Path
 import unittest
 from plane_service.core import attenuate, verify
+
+ROOT = Path(__file__).resolve().parents[1]
+
 
 class MethodBoundCapabilityTests(unittest.TestCase):
     def setUp(self):
@@ -36,6 +41,20 @@ class MethodBoundCapabilityTests(unittest.TestCase):
     def test_attenuation_cannot_escalate_method(self):
         with self.assertRaises(ValueError):
             attenuate(self.cap, [{"type":"file","resource":"report.txt","method":"delete"}])
+
+    def test_frozen_contract_vectors(self):
+        contract = json.loads((ROOT / "contracts/capability-rights-v1.json").read_text())
+        self.assertEqual(contract["contract"], "capability-rights-v1")
+        for vector in contract["vectors"]:
+            with self.subTest(vector=vector["id"]):
+                capability = {
+                    **self.cap,
+                    "rights": [vector["granted"]],
+                }
+                self.assertEqual(
+                    verify(capability, vector["requested"], "worker-a", 1000),
+                    vector["expected"],
+                )
 
 if __name__ == "__main__":
     unittest.main()
