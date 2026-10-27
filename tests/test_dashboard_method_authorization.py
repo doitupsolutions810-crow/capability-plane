@@ -41,6 +41,24 @@ class DashboardMethodAuthorizationTests(unittest.TestCase):
         self.assertEqual(calls[1].args[1]["required"], rights[0])
         self.assertEqual(calls[2].args[1]["required"], rights[0])
 
+    def test_flat_resource_and_method_are_mapped_to_one_complete_right(self):
+        responses = [
+            {"status": "ok", "capability": {"id": "cap-1"}, "signature": "sig"},
+            {"valid": True},
+            {"status": "ok"},
+        ]
+        with patch.object(app, "plane_post", side_effect=responses) as plane_post:
+            result = app.run_intent({
+                "resource": "tool.summarize",
+                "method": "invoke",
+            })
+
+        self.assertEqual(result["stage"], "execute")
+        self.assertEqual(
+            plane_post.call_args_list[0].args[1]["rights"],
+            [{"type": "Execute", "resource": "tool.summarize", "method": "invoke"}],
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
