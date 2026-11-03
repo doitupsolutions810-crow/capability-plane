@@ -11,6 +11,7 @@ from contextlib import contextmanager
 import json
 import math
 import os
+import re
 from pathlib import Path
 import sqlite3
 import time
@@ -205,8 +206,12 @@ def jetstream_publish_fn(subject_prefix: str = "admin.commands.v1", *, transport
     if transport is None:
         raise OutboxError("JetStream transport is not configured; cannot claim delivery")
     _name(subject_prefix, "subject_prefix")
+    if any(not re.fullmatch(r"[A-Za-z0-9_-]+", part) for part in subject_prefix.split(".")):
+        raise OutboxError("invalid JetStream subject prefix")
 
     def _publish(ev: OutboxEvent) -> bool:
+        if not re.fullmatch(r"[A-Za-z0-9_-]+", ev.event_type):
+            raise OutboxError("event type is unsafe as a JetStream subject token")
         return transport(subject_prefix + "." + ev.event_type,
                          {"event_id": ev.id, "aggregate_id": ev.aggregate_id,
                           "event_type": ev.event_type, "payload": ev.payload}) is True
