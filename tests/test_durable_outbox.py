@@ -96,6 +96,16 @@ class OutboxTests(unittest.TestCase):
         self.assertEqual(self.o.relay_once(transport),1)
         self.assertEqual(delivery[0][1]['event_id'] is not None,True)
 
+    def test_subject_wildcard_never_reaches_transport(self):
+        with self.assertRaises(OutboxError):
+            jetstream_publish_fn('admin.>', transport=lambda subject,payload: True)
+        self.o.enqueue('j','danger.*',{'x':1})
+        calls=[]
+        pub=jetstream_publish_fn(transport=lambda subject,payload: calls.append(subject) or True)
+        self.assertEqual(self.o.relay_once(pub),0)
+        self.assertEqual(calls,[])
+        self.assertEqual(self.o.unpublished_count(),1)
+
     def test_duplicate_concurrent_enqueue_single_record(self):
         barrier=threading.Barrier(10)
         def worker(i):
