@@ -1,0 +1,53 @@
+{
+  "schema": "avrone.integration-source-registry/v1",
+  "as_of": "2026-11-03",
+  "target_repo": "doitupsolutions810-crow/capability-plane",
+  "status": "review_required",
+  "sources": [
+    {
+      "repository": "doitupsolutions810-crow/capability-plane",
+      "revision": "102554b1adb416a552fdf9f9792ce7578ca941c4",
+      "file": "admin/durable_outbox.py",
+      "observation": "Missing OutboxEvent import, non-atomic claims, stub publisher returning unverified delivery",
+      "verification": "source_inspected"
+    },
+    {
+      "repository": "doitupsolutions810-crow/Avrone",
+      "pull_request": "https://github.com/doitupsolutions810-crow/Avrone/pull/19",
+      "observation": "Trinity durable dispatch proposed; queue not completion",
+      "verification": "open_pr_reviewed"
+    },
+    {
+      "repository": "doitupsolutions810-crow/capability-authority",
+      "pull_request": "https://github.com/doitupsolutions810-crow/capability-authority/pull/17",
+      "observation": "Correlation idempotency and authorization-only execution receipts proposed",
+      "verification": "open_pr_reviewed"
+    },
+    {
+      "repository": "doitupsolutions810-crow/swarm-vm-runner",
+      "pull_request": "https://github.com/doitupsolutions810-crow/swarm-vm-runner/pull/3",
+      "observation": "Authenticated enqueue and specialist evidence proposed",
+      "verification": "open_pr_reviewed"
+    },
+    {
+      "repository": "doitupsolutions810-crow/attested-history",
+      "pull_request": "https://github.com/doitupsolutions810-crow/attested-history/pull/2",
+      "observation": "Hash-chain integrity hardening proposed; signature verification remains separate",
+      "verification": "open_pr_reviewed"
+    },
+    {
+      "repository": "doitupsolutions810-crow/great-scale",
+      "revision": "74cad04cf43746e098b8af50af9c811da6b313a4",
+      "file": "research/DESCENT_XCIV_EVIDENCE_TRUST_GATES.md",
+      "observation": "Scientific validity is distinct from provenance and authorization",
+      "verification": "source_inspected"
+    }
+  ],
+  "release_gates": [
+    "complete_exact_head_ci",
+    "real_authenticated_transport_ack",
+    "downstream_event_id_idempotency",
+    "process_fault_injection",
+    "source_signature_and_provenance_verification"
+  ]
+}
