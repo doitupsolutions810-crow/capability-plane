@@ -31,6 +31,24 @@ class Executor:
         self.rate_limiter = RateLimiter()
         self.crl: set[str] = set()
         self.acceptance = load_acceptance()
+        # Lineage the executor has seen: capability id -> parent id.
+        # Attenuation mints a fresh id per child, so per-id checks
+        # (revocation, rate limits) are meaningless unless they are
+        # evaluated against the whole lineage.
+        self._parents: Dict[str, Any] = {}
+
+    def _lineage(self, cap: dict[str, Any]) -> list[str]:
+        """[cap id, parent id, grandparent id, ...] as far as known.
+
+        The direct parent_id comes from the capability itself; deeper
+        ancestors come from capabilities this executor has seen.
+        """
+        ids = [cap.get("id")]
+        parent = cap.get("parent_id")
+        while parent and parent not in ids:
+            ids.append(parent)
+            parent = self._parents.get(parent)
+        return ids
 
     def execute(
         self,
@@ -39,7 +57,11 @@ class Executor:
         required: dict[str, Any],
         caller: str,
     ) -> dict[str, Any]:
-        if cap.get("id") in self.crl:
+        self._parents[cap.get("id")] = cap.get("parent_id")
+        lineage = self._lineage(cap)
+        # Revoking any ancestor revokes the whole line: a child of a
+        # revoked parent must not execute.
+        if any(cid in self.crl for cid in lineage):
             return {"status": "error", "error": "revoked"}
         if not verify_sig(cap, signature):
             return {"status": "error", "error": "invalid signature"}
@@ -51,7 +73,10 @@ class Executor:
         rl = (cap.get("constraints") or {}).get("rate_limit") or {}
         count = int(rl.get("count") or 5)
         window = int(rl.get("window_seconds") or 60)
-        key = f"{cap.get('id')}:{required.get('type')}:{required.get('resource')}"
+        # Rate limits are keyed by the lineage ROOT, not the cap id:
+        # attenuating a fresh child must not reset the budget.
+        root = lineage[-1]
+        key = f"{root}:{required.get('type')}:{required.get('resource')}"
         if not self.rate_limiter.allow(key, count, window):
             return {"status": "error", "error": "rate limited"}
 

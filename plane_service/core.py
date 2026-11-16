@@ -66,6 +66,11 @@ def verify(
     if cap.get("audience") not in (caller, "*"):
         return False
     for r in cap.get("rights") or []:
-        if r.get("type") == required.get("type") and r.get("resource") == required.get("resource"):
+        # A right authorizes exactly what it names: type, resource AND
+        # method. Matching on type+resource alone let a GET-only
+        # capability execute DELETE requirements (method confusion).
+        if (r.get("type") == required.get("type")
+                and r.get("resource") == required.get("resource")
+                and r.get("method") == required.get("method")):
             return True
     return False
